@@ -25,20 +25,13 @@ func main() {
 	lines, _ := r.ReadAll()
 	problems := parseLines(lines)
 
-	scanner := bufio.NewScanner(os.Stdin)
 	score := 0
 	timer := time.NewTimer(time.Duration(*timeLimit) * time.Second)
 
 	for _, problem := range problems {
-
 		fmt.Printf("Question: %s \n", problem.question)
 		answerCh := make(chan string)
-		go func() {
-			fmt.Print("Answer: ")
-			scanner.Scan()
-			answer := scanner.Text()
-			answerCh <- answer
-		}()
+		go askQuestion(answerCh)
 
 		select {
 		case <-timer.C:
@@ -63,6 +56,14 @@ func parseLines(lines [][]string) []problem {
 		}
 	}
 	return problems
+}
+
+func askQuestion(answerCh chan string) {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Answer: ")
+	scanner.Scan()
+	answer := scanner.Text()
+	answerCh <- answer
 }
 
 type problem struct {
