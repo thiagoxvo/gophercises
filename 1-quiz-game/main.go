@@ -5,7 +5,6 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 )
@@ -21,31 +20,36 @@ func main() {
 		log.Fatalln("Could not open the csv file", err)
 	}
 	r := csv.NewReader(csvfile)
+	lines, err := r.ReadAll()
+	problems := parseLines(lines)
 
 	scanner := bufio.NewScanner(os.Stdin)
 	score := 0
-	questions := 0
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Question: %s \n", record[0])
+	for _, problem := range problems {
+		fmt.Printf("Question: %s \n", problem.question)
 		fmt.Print("Answer: ")
 		scanner.Scan()
 		answer := scanner.Text()
 
-		if len(answer) == 0 {
-			log.Fatalln("Invalid answer!")
-		}
-		if answer == record[1] {
+		if answer == problem.answer {
 			score++
 		}
-		questions++
 	}
-	fmt.Printf("Your scored: %v out of %v", score, questions)
+	fmt.Printf("Your scored: %v out of %v", score, len(problems))
+}
+
+func parseLines(lines [][]string) []problem {
+	problems := make([]problem, len(lines))
+	for i, line := range lines {
+		problems[i] = problem{
+			question: line[0],
+			answer:   line[1],
+		}
+	}
+	return problems
+}
+
+type problem struct {
+	question string
+	answer   string
 }
