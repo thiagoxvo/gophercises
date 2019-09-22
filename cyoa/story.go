@@ -80,8 +80,10 @@ var defaultHandlerTmpl = `
   </body>
 </html>`
 
+// HandlerOption configure all options for the handler
 type HandlerOption func(h *handler)
 
+// WithTemplate overwrite the default template
 func WithTemplate(t *template.Template) HandlerOption {
 	return func(h *handler) {
 		h.t = t
