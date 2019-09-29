@@ -19,7 +19,7 @@ type Task struct {
 // Init initializes the DB
 func Init(dbPath string) error {
 	var err error
-	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err = bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		panic(err)
 	}
