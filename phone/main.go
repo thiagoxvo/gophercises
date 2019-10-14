@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
+	phonedb "github.com/thiagoxvo/gophercises/phone/db"
 )
 
 const (
@@ -19,20 +20,13 @@ const (
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=disable", host, port, user, password)
 
+	must(phonedb.Reset("postgres", psqlInfo, dbname))
+	psqlInfo = fmt.Sprintf("%s dbname=%s", psqlInfo, dbname)
+	must(phonedb.Migrate("postgres", psqlInfo))
+
 	db, err := sql.Open("postgres", psqlInfo)
 	must(err)
-	err = resetDB(db, dbname)
-	must(err)
-	err = createDB(db, dbname)
-	must(err)
-	db.Close()
-
-	psqlInfo = fmt.Sprintf("%s dbname=%s", psqlInfo, dbname)
-	db, err = sql.Open("postgres", psqlInfo)
-	must(err)
 	defer db.Close()
-
-	must(createPhoneNumbersTable(db))
 
 	_, err = insertPhone(db, "1234567890")
 	must(err)
@@ -148,27 +142,6 @@ func insertPhone(db *sql.DB, phone string) (int, error) {
 		return -1, err
 	}
 	return id, nil
-}
-
-func createPhoneNumbersTable(db *sql.DB) error {
-	statement := `
-		CREATE TABLE IF NOT EXISTS phone_numbers (
-			id SERIAL,
-			value VARCHAR(255)
-		)
-	`
-	_, err := db.Exec(statement)
-	return err
-}
-
-func createDB(db *sql.DB, name string) error {
-	_, err := db.Exec("CREATE DATABASE " + name)
-	return err
-}
-
-func resetDB(db *sql.DB, name string) error {
-	_, err := db.Exec("DROP DATABASE " + name)
-	return err
 }
 
 func normalize(phone string) string {
