@@ -45,12 +45,19 @@ func TestJokers(t *testing.T) {
 
 func TestFilter(t *testing.T) {
 	filter := func(card Card) bool {
-		return card.Rank == Two
+		return card.Rank == Two || card.Rank == Three
 	}
 	cards := New(Filter(filter))
 	for _, c := range cards {
 		if c.Rank == Two || c.Rank == Three {
 			t.Error("Expected all twos and threes to be filter out")
 		}
+	}
+}
+
+func TestDeck(t *testing.T) {
+	cards := New(Deck(3))
+	if len(cards) != 13*4*3 {
+		t.Errorf("Expected %d cards, received %d cards", 13*4*3, len(cards))
 	}
 }
