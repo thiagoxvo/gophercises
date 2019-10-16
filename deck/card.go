@@ -69,9 +69,9 @@ func New(opts ...func([]Card) []Card) []Card {
 		for rank := minRank; rank <= maxRank; rank++ {
 			cards = append(cards, Card{Suit: suit, Rank: rank})
 		}
-		for _, opt := range opts {
-			cards = opt(cards)
-		}
+	}
+	for _, opt := range opts {
+		cards = opt(cards)
 	}
 	return cards
 }
@@ -109,4 +109,17 @@ func Shuffle(cards []Card) []Card {
 		ret[i] = cards[j]
 	}
 	return ret
+}
+
+// Jokers add jokers to deck of cards
+func Jokers(n int) func([]Card) []Card {
+	return func(cards []Card) []Card {
+		for i := 0; i < n; i++ {
+			cards = append(cards, Card{
+				Rank: Rank(i),
+				Suit: Joker,
+			})
+		}
+		return cards
+	}
 }
