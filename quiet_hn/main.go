@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -56,6 +57,7 @@ func handler(numStories int, tpl *template.Template) http.HandlerFunc {
 var (
 	cache           []item
 	cacheExpiration time.Time
+	cacheMutex      sync.Mutex
 )
 
 func getCachedStories(numStories int) ([]item, error) {
