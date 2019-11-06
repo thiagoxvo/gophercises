@@ -4,12 +4,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/thiagoxvo/gophercises/quiet_hn/hn"
@@ -33,7 +33,7 @@ func main() {
 func handler(numStories int, tpl *template.Template) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		stories, err := getTopStories(numStories)
+		stories, err := getCachedStories(numStories)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,6 +53,26 @@ func handler(numStories int, tpl *template.Template) http.HandlerFunc {
 	})
 }
 
+var (
+	cache           []item
+	cacheExpiration time.Time
+)
+
+func getCachedStories(numStories int) ([]item, error) {
+	if time.Now().Sub(cacheExpiration) < 0 {
+		fmt.Println("Cache hit")
+		return cache, nil
+	}
+	fmt.Println("Cache miss")
+	stories, err := getTopStories(numStories)
+	if err != nil {
+		return nil, err
+	}
+	cache = stories
+	cacheExpiration = time.Now().Add(1 * time.Minute)
+	return stories, nil
+}
+
 func getTopStories(numStories int) ([]item, error) {
 	var client hn.Client
 	ids, err := client.TopItems()
@@ -70,7 +90,6 @@ func getTopStories(numStories int) ([]item, error) {
 }
 
 func getStories(ids []int) []item {
-	var client hn.Client
 	type result struct {
 		idx  int
 		item item
@@ -80,6 +99,7 @@ func getStories(ids []int) []item {
 
 	for i := 0; i < len(ids); i++ {
 		go func(idx, id int) {
+			var client hn.Client
 			hnItem, err := client.GetItem(id)
 			if err != nil {
 				resultCh <- result{err: err}
